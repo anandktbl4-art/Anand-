@@ -2,189 +2,238 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Visitor Intelligence Dashboard</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camera + Dashboard</title>
 
-<style>
+<!-- CSS PART 2 ಇಲ್ಲಿ later ಹಾಕುತ್ತೇವೆ -->
+<style></style>
+
+</head>
+<body>
+
+<!----------------------------->
+<!--   CAMERA SECTION FIRST  -->
+<!----------------------------->
+
+<h2>📸 Camera App</h2>
+
+<video id="video" autoplay playsinline></video>
+
+<div class="cam-buttons">
+    <button onclick="takePhoto()">📷 Photo</button>
+    <button onclick="startRec()">⏺ Video Record</button>
+    <button onclick="stopRec()">⏹ Stop</button>
+</div>
+
+<a id="downloadLink"></a>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<hr>
+
+
+<!-------------------------------->
+<!--   VISITOR DASHBOARD BELOW  -->
+<!-------------------------------->
+
+<h2>🧾 Visitor Intelligence Dashboard</h2>
+
+<p id="device"></p>
+<p id="browser"></p>
+<p id="battery"></p>
+<p id="network"></p>
+<p id="ram"></p>
+<p id="screen"></p>
+<p id="orientation"></p>
+
+<p id="ip"></p>
+<p id="location"></p>
+<p id="gps"></p>
+
+<p id="visits"></p>
+<p id="clicks"></p>
+
+<h3>🗺 Live Map</h3>
+<iframe id="map"></iframe>
+
+<!-- PART 3 JS ಇಲ್ಲಿಗೆ ಹಾಕುತ್ತೇವೆ -->
+<script></script>
+
+</body>
+</html>/* CAMERA AREA */
+#video{
+    width:100%;
+    height:60vh;
+    background:#000;
+    object-fit:cover;
+    border:2px solid #00ff00;
+}
+
+.cam-buttons button{
+    padding:10px 18px;
+    margin:8px;
+    background:#00ff00;
+    color:#000;
+    font-weight:bold;
+    border:none;
+    border-radius:10px;
+    font-size:18px;
+    cursor:pointer;
+}
+
+#downloadLink{
+    display:block;
+    margin-top:10px;
+    font-size:18px;
+    color:#00ff00;
+}
+
+/* DASHBOARD */
 body{
     background:#000;
     color:#00ff00;
     font-family:Consolas, monospace;
     text-align:center;
-    padding:20px;
-}
-
-button{
-    background:#00ff00;
-    color:#000;
-    padding:8px 15px;
-    margin:5px;
-    border:none;
-    font-weight:bold;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-.box{
-    border:2px solid #00ff00;
     padding:15px;
-    border-radius:10px;
-    margin-top:20px;
 }
 
 iframe{
     width:100%;
-    height:260px;
+    height:250px;
     border:2px solid #00ff00;
 }
 
-.loader{
-    font-size:22px;
-    margin-top:40px;
-    animation:blink 1s infinite;
+p{
+    font-size:18px;
+}/* ------------------ CAMERA FUNCTIONS ------------------ */
+
+let stream;
+let recorder;
+let chunks = [];
+
+// START CAMERA
+async function startCamera(){
+    stream = await navigator.mediaDevices.getUserMedia({
+        video:true,
+        audio:true
+    });
+    document.getElementById("video").srcObject = stream;
+}
+startCamera();
+
+// TAKE PHOTO
+function takePhoto(){
+    let video = document.getElementById("video");
+    let canvas = document.getElementById("canvas");
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    canvas.getContext("2d").drawImage(video,0,0);
+
+    let imgURL = canvas.toDataURL("image/png");
+
+    let link = document.getElementById("downloadLink");
+    link.href = imgURL;
+    link.download = "photo.png";
+    link.innerText = "⬇ Download Photo";
 }
 
-@keyframes blink{
-    50%{opacity:0;}
-}
-</style>
-</head>
-<body>
-
-<!-- LANGUAGE SWITCH -->
-<button onclick="setLang('en')">English</button>
-<button onclick="setLang('kn')">ಕನ್ನಡ</button>
-
-<div class="loader">🔍 Scanning Visitor… Please wait...</div>
-
-<div class="box" id="dataBox" style="display:none;">
-    <h2 id="title">Visitor Intelligence Report</h2>
-
-    <p id="device"></p>
-    <p id="browser"></p>
-    <p id="ram"></p>
-    <p id="network"></p>
-    <p id="battery"></p>
-    <p id="screen"></p>
-    <p id="orientation"></p>
-
-    <p id="ip"></p>
-    <p id="location"></p>
-    <p id="gps"></p>
-
-    <p id="visits"></p>
-    <p id="clicks"></p>
-
-    <h3 id="mapTitle">🗺️ Visitor Map</h3>
-    <iframe id="map"></iframe>
-</div><script>
-let lang = "en";  // default English
-
-function setLang(l){
-    lang = l;
-    translateUI();
+// START VIDEO RECORD
+function startRec(){
+    chunks=[];
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.onstop = saveVideo;
+    recorder.start();
+    alert("🎥 Recording started");
 }
 
-function translateUI(){
-    if(lang === "kn"){
-        document.getElementById("title").innerText = "👤 ವೀಕ್ಷಕರ ಮಾಹಿತಿ ವರದಿ";
-        document.getElementById("mapTitle").innerText = "🗺️ ನಕ್ಷೆ ಸ್ಥಳ";
-    } else {
-        document.getElementById("title").innerText = "Visitor Intelligence Report";
-        document.getElementById("mapTitle").innerText = "🗺️ Visitor Map";
-    }
+// STOP VIDEO RECORD
+function stopRec(){
+    recorder.stop();
+    alert("📁 Recording stopped");
 }
 
-// VISIT COUNTER
-let visitCount = localStorage.getItem("visits") || 0;
-visitCount++;
-localStorage.setItem("visits", visitCount);
+// CREATE VIDEO FILE
+function saveVideo(){
+    let blob = new Blob(chunks, {type:"video/mp4"});
+    let url = URL.createObjectURL(blob);
 
-document.getElementById("visits").innerText =
-    lang==="kn" ? "ಒಟ್ಟು ಭೇಟಿಗಳು: " + visitCount :
-                  "Total Visits: " + visitCount;
+    let link = document.getElementById("downloadLink");
+    link.href = url;
+    link.download = "video.mp4";
+    link.innerText = "⬇ Download Video";
+}
 
-// CLICK COUNTER
-let clickCount = 0;
-document.addEventListener("click", () => {
-    clickCount++;
-    document.getElementById("clicks").innerText =
-        (lang==="kn" ? "ಸ್ಕ್ರೀನ್ ಕ್ಲಿಕ್ಕುಗಳು: " : "Screen Clicks: ") + clickCount;
-});
+/* ------------------ VISITOR DATA FUNCTIONS ------------------ */
 
 // DEVICE INFO
 document.getElementById("device").innerText = "Device: " + navigator.platform;
 document.getElementById("browser").innerText = "Browser: " + navigator.userAgent;
 
-// RAM
-if(navigator.deviceMemory){
-    document.getElementById("ram").innerText = "RAM: " + navigator.deviceMemory + " GB";
+// BATTERY
+if (navigator.getBattery){
+    navigator.getBattery().then(b=>{
+        document.getElementById("battery").innerText =
+            "Battery: " + Math.round(b.level*100) + "%";
+    });
 }
 
-// NETWORK
-if(navigator.connection){
+// NETWORK TYPE
+if (navigator.connection){
     document.getElementById("network").innerText =
         "Network: " + navigator.connection.effectiveType;
 }
 
-// BATTERY
-if(navigator.getBattery){
-    navigator.getBattery().then(b=>{
-        document.getElementById("battery").innerText =
-            "Battery: " + Math.round(b.level*100)+"%" + (b.charging?" (Charging)":"");
-    });
+// RAM
+if (navigator.deviceMemory){
+    document.getElementById("ram").innerText =
+        "RAM: " + navigator.deviceMemory + " GB";
 }
 
-// SCREEN SIZE
+// SCREEN INFO
 document.getElementById("screen").innerText =
-    "Screen: " + window.screen.width + " x " + window.screen.height;
+    "Screen: " + window.screen.width + " × " + window.screen.height;
 
 // ORIENTATION
 document.getElementById("orientation").innerText =
     "Orientation: " + (screen.orientation.type || "Unknown");
 
-// IP + LOCATION
-let ipData, loc;
+// VISIT COUNTER
+let visit = localStorage.getItem("visits") || 0;
+visit++;
+localStorage.setItem("visits", visit);
+document.getElementById("visits").innerText = "Total Visits: " + visit;
 
+// CLICK COUNTER
+let clicks = 0;
+document.addEventListener("click",()=>{
+    clicks++;
+    document.getElementById("clicks").innerText = "Screen Clicks: " + clicks;
+});
+
+// IP + CITY/STATE INFO
 fetch("https://api.ipify.org?format=json")
-.then(res=>res.json())
-.then(d=>{
-    ipData = d;
-    document.getElementById("ip").innerText = "IP: " + d.ip;
+.then(r=>r.json())
+.then(ip=>{
+    document.getElementById("ip").innerText = "IP: " + ip.ip;
 
     return fetch("https://ipapi.co/json/");
 })
-.then(res=>res.json())
-.then(data=>{
-    loc = data;
+.then(r=>r.json())
+.then(loc=>{
     document.getElementById("location").innerText =
-        "Location: " + data.city + ", " + data.region + ", " + data.country_name;
+        "Location: " + loc.city + ", " + loc.region + ", " + loc.country_name;
 
     document.getElementById("map").src =
-        `https://maps.google.com/maps?q=${data.latitude},${data.longitude}&z=15&output=embed`;
+        `https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=14&output=embed`;
 });
 
-// GPS (Live Tracking – Requires Permission)
-if(navigator.geolocation){
+// GPS LIVE LOCATION
+if (navigator.geolocation){
     navigator.geolocation.watchPosition(pos=>{
         document.getElementById("gps").innerText =
             "GPS: " + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
-
-        document.getElementById("map").src =
-            `https://maps.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}&z=16&output=embed`;
-    },
-    ()=>{
-        document.getElementById("gps").innerText =
-            lang==="kn" ? "GPS ಅನುಮತಿ ಬೇಕು!" : "Please allow GPS permission!";
     });
 }
-
-// SHOW DATA
-setTimeout(()=>{
-    document.querySelector(".loader").style.display="none";
-    document.getElementById("dataBox").style.display="block";
-}, 2000);
-</script>
-
-</body>
-</html>
