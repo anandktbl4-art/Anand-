@@ -1,67 +1,22 @@
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Camera + Dashboard</title>
 
-<!-- CSS PART 2 ಇಲ್ಲಿ later ಹಾಕುತ್ತೇವೆ -->
-<style></style>
+<style>
+body{
+    background:#000;
+    color:#00ff00;
+    font-family:Consolas, monospace;
+    text-align:center;
+    padding:15px;
+}
 
-</head>
-<body>
+h2,h3{ color:#00ff00; }
 
-<!----------------------------->
-<!--   CAMERA SECTION FIRST  -->
-<!----------------------------->
-
-<h2>📸 Camera App</h2>
-
-<video id="video" autoplay playsinline></video>
-
-<div class="cam-buttons">
-    <button onclick="takePhoto()">📷 Photo</button>
-    <button onclick="startRec()">⏺ Video Record</button>
-    <button onclick="stopRec()">⏹ Stop</button>
-</div>
-
-<a id="downloadLink"></a>
-
-<canvas id="canvas" style="display:none;"></canvas>
-
-<hr>
-
-
-<!-------------------------------->
-<!--   VISITOR DASHBOARD BELOW  -->
-<!-------------------------------->
-
-<h2>🧾 Visitor Intelligence Dashboard</h2>
-
-<p id="device"></p>
-<p id="browser"></p>
-<p id="battery"></p>
-<p id="network"></p>
-<p id="ram"></p>
-<p id="screen"></p>
-<p id="orientation"></p>
-
-<p id="ip"></p>
-<p id="location"></p>
-<p id="gps"></p>
-
-<p id="visits"></p>
-<p id="clicks"></p>
-
-<h3>🗺 Live Map</h3>
-<iframe id="map"></iframe>
-
-<!-- PART 3 JS ಇಲ್ಲಿಗೆ ಹಾಕುತ್ತೇವೆ -->
-<script></script>
-
-</body>
-</html>/* CAMERA AREA */
-#video{
+video{
     width:100%;
     height:60vh;
     background:#000;
@@ -88,30 +43,59 @@
     color:#00ff00;
 }
 
-/* DASHBOARD */
-body{
-    background:#000;
-    color:#00ff00;
-    font-family:Consolas, monospace;
-    text-align:center;
-    padding:15px;
-}
-
 iframe{
     width:100%;
-    height:250px;
+    height:260px;
     border:2px solid #00ff00;
 }
 
-p{
-    font-size:18px;
-}/* ------------------ CAMERA FUNCTIONS ------------------ */
+p{ font-size:18px; }
+</style>
 
+</head>
+<body>
+
+<h2>📸 Camera App</h2>
+
+<video id="video" autoplay playsinline></video>
+
+<div class="cam-buttons">
+    <button onclick="takePhoto()">📷 Photo</button>
+    <button onclick="startRec()">⏺ Video Record</button>
+    <button onclick="stopRec()">⏹ Stop</button>
+</div>
+
+<a id="downloadLink"></a>
+<canvas id="canvas" style="display:none;"></canvas>
+
+<hr>
+
+<h2>🧾 Visitor Intelligence Dashboard</h2>
+
+<p id="device"></p>
+<p id="browser"></p>
+<p id="battery"></p>
+<p id="network"></p>
+<p id="ram"></p>
+<p id="screen"></p>
+<p id="orientation"></p>
+
+<p id="ip"></p>
+<p id="location"></p>
+<p id="gps"></p>
+
+<p id="visits"></p>
+<p id="clicks"></p>
+
+<h3>🗺 Live Map</h3>
+<iframe id="map"></iframe>
+
+<script>
+// CAMERA
 let stream;
 let recorder;
 let chunks = [];
 
-// START CAMERA
 async function startCamera(){
     stream = await navigator.mediaDevices.getUserMedia({
         video:true,
@@ -121,7 +105,6 @@ async function startCamera(){
 }
 startCamera();
 
-// TAKE PHOTO
 function takePhoto(){
     let video = document.getElementById("video");
     let canvas = document.getElementById("canvas");
@@ -132,30 +115,25 @@ function takePhoto(){
     canvas.getContext("2d").drawImage(video,0,0);
 
     let imgURL = canvas.toDataURL("image/png");
-
     let link = document.getElementById("downloadLink");
+
     link.href = imgURL;
     link.download = "photo.png";
     link.innerText = "⬇ Download Photo";
 }
 
-// START VIDEO RECORD
 function startRec(){
     chunks=[];
     recorder = new MediaRecorder(stream);
     recorder.ondataavailable = e => chunks.push(e.data);
     recorder.onstop = saveVideo;
     recorder.start();
-    alert("🎥 Recording started");
 }
 
-// STOP VIDEO RECORD
 function stopRec(){
     recorder.stop();
-    alert("📁 Recording stopped");
 }
 
-// CREATE VIDEO FILE
 function saveVideo(){
     let blob = new Blob(chunks, {type:"video/mp4"});
     let url = URL.createObjectURL(blob);
@@ -166,13 +144,11 @@ function saveVideo(){
     link.innerText = "⬇ Download Video";
 }
 
-/* ------------------ VISITOR DATA FUNCTIONS ------------------ */
+// VISITOR DATA
 
-// DEVICE INFO
 document.getElementById("device").innerText = "Device: " + navigator.platform;
 document.getElementById("browser").innerText = "Browser: " + navigator.userAgent;
 
-// BATTERY
 if (navigator.getBattery){
     navigator.getBattery().then(b=>{
         document.getElementById("battery").innerText =
@@ -180,45 +156,37 @@ if (navigator.getBattery){
     });
 }
 
-// NETWORK TYPE
 if (navigator.connection){
     document.getElementById("network").innerText =
         "Network: " + navigator.connection.effectiveType;
 }
 
-// RAM
 if (navigator.deviceMemory){
     document.getElementById("ram").innerText =
         "RAM: " + navigator.deviceMemory + " GB";
 }
 
-// SCREEN INFO
 document.getElementById("screen").innerText =
     "Screen: " + window.screen.width + " × " + window.screen.height;
 
-// ORIENTATION
 document.getElementById("orientation").innerText =
     "Orientation: " + (screen.orientation.type || "Unknown");
 
-// VISIT COUNTER
 let visit = localStorage.getItem("visits") || 0;
 visit++;
 localStorage.setItem("visits", visit);
 document.getElementById("visits").innerText = "Total Visits: " + visit;
 
-// CLICK COUNTER
 let clicks = 0;
 document.addEventListener("click",()=>{
     clicks++;
     document.getElementById("clicks").innerText = "Screen Clicks: " + clicks;
 });
 
-// IP + CITY/STATE INFO
 fetch("https://api.ipify.org?format=json")
 .then(r=>r.json())
 .then(ip=>{
     document.getElementById("ip").innerText = "IP: " + ip.ip;
-
     return fetch("https://ipapi.co/json/");
 })
 .then(r=>r.json())
@@ -230,10 +198,13 @@ fetch("https://api.ipify.org?format=json")
         `https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=14&output=embed`;
 });
 
-// GPS LIVE LOCATION
 if (navigator.geolocation){
     navigator.geolocation.watchPosition(pos=>{
         document.getElementById("gps").innerText =
             "GPS: " + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
     });
 }
+</script>
+
+</body>
+<
