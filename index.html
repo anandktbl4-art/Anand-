@@ -3,109 +3,96 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Super Advanced Visitor Dashboard</title>
+<title>Visitor Intelligence Dashboard</title>
 
-<!-- PART 2 CSS ADD ಮಾಡೋದು ಮುಂದಿನ message ನಲ್ಲಿ -->
 <style>
-</style>
+body{
+    background:#000;
+    color:#00ff00;
+    font-family:Consolas, monospace;
+    text-align:center;
+    padding:20px;
+}
 
+button{
+    background:#00ff00;
+    color:#000;
+    padding:8px 15px;
+    margin:5px;
+    border:none;
+    font-weight:bold;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.box{
+    border:2px solid #00ff00;
+    padding:15px;
+    border-radius:10px;
+    margin-top:20px;
+}
+
+iframe{
+    width:100%;
+    height:260px;
+    border:2px solid #00ff00;
+}
+
+.loader{
+    font-size:22px;
+    margin-top:40px;
+    animation:blink 1s infinite;
+}
+
+@keyframes blink{
+    50%{opacity:0;}
+}
+</style>
 </head>
 <body>
 
 <!-- LANGUAGE SWITCH -->
-<button id="btnEN">English</button>
-<button id="btnKN">ಕನ್ನಡ</button>
+<button onclick="setLang('en')">English</button>
+<button onclick="setLang('kn')">ಕನ್ನಡ</button>
 
-<h2 id="title">Visitor Intelligence Dashboard</h2>
+<div class="loader">🔍 Scanning Visitor… Please wait...</div>
 
-<div class="box">
+<div class="box" id="dataBox" style="display:none;">
+    <h2 id="title">Visitor Intelligence Report</h2>
 
     <p id="device"></p>
     <p id="browser"></p>
     <p id="ram"></p>
-    <p id="battery"></p>
     <p id="network"></p>
+    <p id="battery"></p>
     <p id="screen"></p>
     <p id="orientation"></p>
 
     <p id="ip"></p>
     <p id="location"></p>
-
     <p id="gps"></p>
 
     <p id="visits"></p>
     <p id="clicks"></p>
 
-    <h3>🗺 Live Map</h3>
+    <h3 id="mapTitle">🗺️ Visitor Map</h3>
     <iframe id="map"></iframe>
+</div><script>
+let lang = "en";  // default English
 
-    <h3>📡 Motion Sensor</h3>
-    <p id="motion"></p>
-
-    <h3>💡 Light Sensor</h3>
-    <p id="light"></p>
-
-</div>
-
-<!-- PART 3 JS ADD ಮಾಡೋದು ಮುಂದಿನ message ನಲ್ಲಿ -->
-<script>
-</script>
-
-</body>
-</html>body {
-    background: #000;
-    color: #00ff00;
-    font-family: Consolas, monospace;
-    text-align: center;
-    padding: 20px;
-}
-
-button {
-    background: #00ff00;
-    color: #000;
-    padding: 8px 15px;
-    border: none;
-    font-weight: bold;
-    border-radius: 5px;
-    margin: 5px;
-    cursor: pointer;
-}
-
-.box {
-    border: 2px solid #00ff00;
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 20px;
-}
-
-iframe {
-    width: 100%;
-    height: 260px;
-    border: 2px solid #00ff00;
-}
-
-h2, h3 {
-    color: #00ff00;
-} // LANGUAGE SWITCH
-document.getElementById("btnEN").onclick = () => setLang("en");
-document.getElementById("btnKN").onclick = () => setLang("kn");
-
-let lang = "en";
-
-function setLang(l) {
+function setLang(l){
     lang = l;
     translateUI();
 }
 
-function translateUI() {
-    document.getElementById("title").innerText =
-        lang === "kn" ? "ಭೇಟಿದಾರರ ಮಾಹಿತಿ ಡ್ಯಾಶ್‌ಬೋರ್ಡ್" : "Visitor Intelligence Dashboard";
-
-    document.getElementById("visits").innerText =
-        lang === "kn" ? "ಒಟ್ಟು ಭೇಟಿಗಳು: " + visitCount : "Total Visits: " + visitCount;
-
-    document.getElementById("clicks").innerText =
-        lang === "kn" ? "ಸ್ಕ್ರೀನ್ ಕ್ಲಿಕ್‌ಗಳು: " + clickCount : "Screen Clicks: " + clickCount;
+function translateUI(){
+    if(lang === "kn"){
+        document.getElementById("title").innerText = "👤 ವೀಕ್ಷಕರ ಮಾಹಿತಿ ವರದಿ";
+        document.getElementById("mapTitle").innerText = "🗺️ ನಕ್ಷೆ ಸ್ಥಳ";
+    } else {
+        document.getElementById("title").innerText = "Visitor Intelligence Report";
+        document.getElementById("mapTitle").innerText = "🗺️ Visitor Map";
+    }
 }
 
 // VISIT COUNTER
@@ -113,18 +100,42 @@ let visitCount = localStorage.getItem("visits") || 0;
 visitCount++;
 localStorage.setItem("visits", visitCount);
 
+document.getElementById("visits").innerText =
+    lang==="kn" ? "ಒಟ್ಟು ಭೇಟಿಗಳು: " + visitCount :
+                  "Total Visits: " + visitCount;
+
 // CLICK COUNTER
 let clickCount = 0;
 document.addEventListener("click", () => {
     clickCount++;
-    translateUI();
+    document.getElementById("clicks").innerText =
+        (lang==="kn" ? "ಸ್ಕ್ರೀನ್ ಕ್ಲಿಕ್ಕುಗಳು: " : "Screen Clicks: ") + clickCount;
 });
 
-// DEVICE & BROWSER INFO
+// DEVICE INFO
 document.getElementById("device").innerText = "Device: " + navigator.platform;
 document.getElementById("browser").innerText = "Browser: " + navigator.userAgent;
 
-// SCREEN INFO
+// RAM
+if(navigator.deviceMemory){
+    document.getElementById("ram").innerText = "RAM: " + navigator.deviceMemory + " GB";
+}
+
+// NETWORK
+if(navigator.connection){
+    document.getElementById("network").innerText =
+        "Network: " + navigator.connection.effectiveType;
+}
+
+// BATTERY
+if(navigator.getBattery){
+    navigator.getBattery().then(b=>{
+        document.getElementById("battery").innerText =
+            "Battery: " + Math.round(b.level*100)+"%" + (b.charging?" (Charging)":"");
+    });
+}
+
+// SCREEN SIZE
 document.getElementById("screen").innerText =
     "Screen: " + window.screen.width + " x " + window.screen.height;
 
@@ -132,77 +143,48 @@ document.getElementById("screen").innerText =
 document.getElementById("orientation").innerText =
     "Orientation: " + (screen.orientation.type || "Unknown");
 
-// NETWORK INFO
-if (navigator.connection) {
-    document.getElementById("network").innerText =
-        "Network: " + navigator.connection.effectiveType;
-}
+// IP + LOCATION
+let ipData, loc;
 
-// BATTERY INFO
-if (navigator.getBattery) {
-    navigator.getBattery().then(b => {
-        document.getElementById("battery").innerText =
-            "Battery: " + Math.round(b.level * 100) + "% " + (b.charging ? "(Charging)" : "");
-    });
-}
+fetch("https://api.ipify.org?format=json")
+.then(res=>res.json())
+.then(d=>{
+    ipData = d;
+    document.getElementById("ip").innerText = "IP: " + d.ip;
 
-// RAM INFO
-if (navigator.deviceMemory) {
-    document.getElementById("ram").innerText = "RAM: " + navigator.deviceMemory + " GB";
-}
+    return fetch("https://ipapi.co/json/");
+})
+.then(res=>res.json())
+.then(data=>{
+    loc = data;
+    document.getElementById("location").innerText =
+        "Location: " + data.city + ", " + data.region + ", " + data.country_name;
 
-// MOTION SENSOR
-window.addEventListener("deviceorientation", (e) => {
-    document.getElementById("motion").innerText =
-        "Motion → X: " + e.beta + " | Y: " + e.gamma;
+    document.getElementById("map").src =
+        `https://maps.google.com/maps?q=${data.latitude},${data.longitude}&z=15&output=embed`;
 });
 
-// LIGHT SENSOR (supported devices only)
-if ("AmbientLightSensor" in window) {
-    try {
-        const sensor = new AmbientLightSensor();
-        sensor.onreading = () => {
-            document.getElementById("light").innerText =
-                "Light Level: " + sensor.illuminance + " lx";
-        };
-        sensor.start();
-    } catch (err) {
-        document.getElementById("light").innerText = "Light Sensor Not Supported";
-    }
-} else {
-    document.getElementById("light").innerText = "Light Sensor Not Supported";
-}
-
-// IP + Location
-fetch("https://api.ipify.org?format=json")
-    .then(r => r.json())
-    .then(ip => {
-        document.getElementById("ip").innerText = "IP: " + ip.ip;
-
-        return fetch("https://ipapi.co/json/");
-    })
-    .then(r => r.json())
-    .then(loc => {
-        document.getElementById("location").innerText =
-            "Location: " + loc.city + ", " + loc.region + ", " + loc.country_name;
+// GPS (Live Tracking – Requires Permission)
+if(navigator.geolocation){
+    navigator.geolocation.watchPosition(pos=>{
+        document.getElementById("gps").innerText =
+            "GPS: " + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
 
         document.getElementById("map").src =
-            `https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=15&output=embed`;
+            `https://maps.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}&z=16&output=embed`;
+    },
+    ()=>{
+        document.getElementById("gps").innerText =
+            lang==="kn" ? "GPS ಅನುಮತಿ ಬೇಕು!" : "Please allow GPS permission!";
     });
-
-// GPS (Permission Required)
-if (navigator.geolocation) {
-    navigator.geolocation.watchPosition(
-        pos => {
-            document.getElementById("gps").innerText =
-                "GPS: " + pos.coords.latitude.toFixed(5) + ", " + pos.coords.longitude.toFixed(5);
-
-            document.getElementById("map").src =
-                `https://maps.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}&z=16&output=embed`;
-        },
-        () => {
-            document.getElementById("gps").innerText =
-                lang === "kn" ? "GPS ಅನುಮತಿ ಕೊಡಿ!" : "Please allow GPS permission!";
-        }
-    );
 }
+
+// SHOW DATA
+setTimeout(()=>{
+    document.querySelector(".loader").style.display="none";
+    document.getElementById("dataBox").style.display="block";
+}, 2000);
+</script>
+
+</body>
+</html>
