@@ -1,147 +1,162 @@
-
-  
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Visitor Tracking</title>
+<title>Visitor Intelligence Report</title>
 
 <style>
-    body {
-        margin: 0;
+    body{
         background: #000;
-        font-family: Consolas, monospace;
         color: #00ff00;
+        font-family: Consolas, monospace;
+        margin:0;
+        padding:20px;
+        text-align:center;
     }
 
-    .loader {
-        text-align: center;
-        margin-top: 40px;
-        font-size: 22px;
+    .box{
+        display:none;
+        background: rgba(0,0,0,0.85);
+        padding:20px;
+        border:2px solid #00ff00;
+        border-radius:10px;
+        max-width:450px;
+        margin:auto;
+        box-shadow:0 0 15px #00ff00;
+    }
+
+    h2{ font-size:24px; }
+    p{ font-size:17px; }
+
+    .toggle-btn{
+        margin-top:10px;
+        padding:6px 14px;
+        border:none;
+        background:#00ff00;
+        color:black;
+        font-weight:bold;
+        border-radius:6px;
+        cursor:pointer;
+    }
+
+    iframe{
+        width:100%;
+        height:260px;
+        border:2px solid #00ff00;
+        margin-top:12px;
+    }
+
+    .loader{
+        font-size:22px;
+        margin-top:40px;
         animation: blink 1s infinite;
     }
 
-    @keyframes blink {
-        50% { opacity: 0; }
-    }
-
-    .box {
-        display: none;
-        background: rgba(0,0,0,0.85);
-        border: 2px solid #00ff00;
-        padding: 20px;
-        border-radius: 10px;
-        width: 90%;
-        max-width: 480px;
-        margin: 30px auto;
-        box-shadow: 0 0 15px #00ff00;
-    }
-
-    h2 {
-        text-align: center;
-        color: #00ff00;
-    }
-
-    p { font-size: 17px; }
-
-    .counter {
-        text-align: center;
-        color: yellow;
-        margin-top: 20px;
-    }
-
-    iframe {
-        width: 100%;
-        height: 270px;
-        border: 2px solid #00ff00;
-        margin-top: 15px;
+    @keyframes blink{
+        50%{opacity:0;}
     }
 </style>
-
 </head>
+
 <body>
 
-<div class="loader">🔍 Scanning Visitor… Please wait…</div>
+<button class="toggle-btn" onclick="setLang('en')">English</button>
+<button class="toggle-btn" onclick="setLang('kn')">ಕನ್ನಡ</button>
+
+<div class="loader">🔍 Scanning Visitor... Please wait…</div>
 
 <div class="box">
-    <h2>🕵️ Visitor Intelligence Report</h2>
+    <h2 id="title">Visitor Intelligence Report</h2>
 
     <p id="browser"></p>
     <p id="device"></p>
     <p id="ip"></p>
     <p id="location"></p>
-    <p id="clicks"></p>
 
-    <div class="counter">Total Visits: <span id="visitCount"></span></div>
+    <p id="visits"></p>
 
-    <h3 style="color:#00ff00; text-align:center;">🗺 Visitor Map</h3>
-    <iframe id="map" loading="lazy"></iframe>
+    <h2 id="mapTitle">🗺 Visitor Map</h2>
+    <iframe id="map"></iframe>
 </div>
 
 <script>
-// Show Data Box
-function showData() {
-    document.querySelector(".loader").style.display = "none";
-    document.querySelector(".box").style.display = "block";
+let lang = "en";  // default English
+
+function setLang(l){
+    lang = l;
+    translateUI();
 }
 
-// Visitor Counter
-let count = localStorage.getItem("visits");
-if (!count) count = 1;
-else count = parseInt(count) + 1;
-localStorage.setItem("visits", count);
+function translateUI(){
+    if(lang === "kn"){
+        document.getElementById("title").innerText = "🔍 ಭೇಟಿ ನೀಡಿದವರ ಮಾಹಿತಿ ವರದಿ";
+        document.getElementById("mapTitle").innerText = "🗺 ಭೇಟಿ ನೋಡುವ नकಶೆ";
+        document.getElementById("visits").innerText = "ಒಟ್ಟು ಭೇಟಿಗಳು: " + visitCount;
+    } else {
+        document.getElementById("title").innerText = "Visitor Intelligence Report";
+        document.getElementById("mapTitle").innerText = "🗺 Visitor Map";
+        document.getElementById("visits").innerText = "Total Visits: " + visitCount;
+    }
+}
 
-document.getElementById("visitCount").innerText = count;
+let visitCount = localStorage.getItem("visits") || 0;
+visitCount++;
+localStorage.setItem("visits", visitCount);
 
-// Click tracker
-let clickCount = 0;
-document.addEventListener("click", () => {
-    clickCount++;
-    document.getElementById("clicks").innerText = "Screen Clicks: " + clickCount;
-});
+document.getElementById("visits").innerText = 
+    (lang === "kn") ? "ಒಟ್ಟು ಭೇಟಿಗಳು: " + visitCount : "Total Visits: " + visitCount;
 
-// Browser + Device Information
-document.getElementById("browser").innerText = "Browser: " + navigator.userAgent;
+// Show Data Function
+function showBox(){
+    document.querySelector(".loader").style.display="none";
+    document.querySelector(".box").style.display="block";
+}
 
-// Exact Device Model detector
-function getDeviceModel() {
+// Detect Device Type
+function detectDevice(){
     let ua = navigator.userAgent;
-    if (ua.includes("Android")) return "Android Device";
-    if (ua.includes("iPhone")) return "iPhone";
-    if (ua.includes("iPad")) return "iPad";
-    if (ua.includes("Windows")) return "Windows PC";
-    if (ua.includes("Mac")) return "MacBook / iMac";
+    if(ua.includes("Android")) return "Android Device";
+    if(ua.includes("iPhone")) return "iPhone";
+    if(ua.includes("iPad")) return "iPad";
+    if(ua.includes("Windows")) return "Windows PC";
+    if(ua.includes("Mac")) return "MacBook / iMac";
     return "Unknown Device";
 }
 
-document.getElementById("device").innerText = "Device: " + getDeviceModel();
+// Browser Info
+document.getElementById("browser").innerText = 
+    "Browser: " + navigator.userAgent;
 
-// Fetch Visitor IP
+document.getElementById("device").innerText = 
+    "Device: " + detectDevice();
+
+// Fetch IP
+let ipData, loc;
+
 fetch("https://api.ipify.org?format=json")
 .then(res => res.json())
-.then(ipData => {
-    document.getElementById("ip").innerText = "IP Address: " + ipData.ip;
+.then(data => {
+    ipData = data;
+    document.getElementById("ip").innerText = 
+        "IP Address: " + data.ip;
 
-    // Fetch Visitor Location
-    fetch("https://ipapi.co/json/")
-    .then(res => res.json())
-    .then(loc => {
+    // Fetch Location
+    return fetch("https://ipapi.co/json/");
+})
+.then(res => res.json())
+.then(data => {
+    loc = data;
 
-        document.getElementById("location").innerText =
-        "Location: " + loc.city + ", " + loc.region + ", " + loc.country_name;
+    document.getElementById("location").innerText =
+        "Location: " + data.city + ", " + data.region + ", " + data.country_name;
 
-        // Map
-        document.getElementById("map").src =
-        `https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=12&output=embed`;
+    document.getElementById("map").src =
+        `https://maps.google.com/maps?q=${data.latitude},${data.longitude}&z=12&output=embed`;
 
-        showData();
-
-        // Email Alert (Optional)
-        fetch(`https://maker.ifttt.com/trigger/visitor_alert/with/key/YOUR_KEY?value1=${ipData.ip}&value2=${loc.city}&value3=${navigator.userAgent}`);
-    });
+    showBox();
 });
 </script>
 
-</body>w
+</body>
 </html>
