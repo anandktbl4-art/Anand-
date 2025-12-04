@@ -1,59 +1,146 @@
+
+  
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visitor Info</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advanced Visitor Tracking</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f2f2f2;
-            padding: 20px;
-        }
-        .box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            width: 90%;
-            max-width: 400px;
-            margin: auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h2 { text-align: center; }
-        p { font-size: 18px; }
-    </style>
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        font-family: Consolas, monospace;
+        color: #00ff00;
+    }
+
+    .loader {
+        text-align: center;
+        margin-top: 40px;
+        font-size: 22px;
+        animation: blink 1s infinite;
+    }
+
+    @keyframes blink {
+        50% { opacity: 0; }
+    }
+
+    .box {
+        display: none;
+        background: rgba(0,0,0,0.85);
+        border: 2px solid #00ff00;
+        padding: 20px;
+        border-radius: 10px;
+        width: 90%;
+        max-width: 480px;
+        margin: 30px auto;
+        box-shadow: 0 0 15px #00ff00;
+    }
+
+    h2 {
+        text-align: center;
+        color: #00ff00;
+    }
+
+    p { font-size: 17px; }
+
+    .counter {
+        text-align: center;
+        color: yellow;
+        margin-top: 20px;
+    }
+
+    iframe {
+        width: 100%;
+        height: 270px;
+        border: 2px solid #00ff00;
+        margin-top: 15px;
+    }
+</style>
+
 </head>
 <body>
 
+<div class="loader">🔍 Scanning Visitor… Please wait…</div>
+
 <div class="box">
-    <h2>Your Visitor Info</h2>
+    <h2>🕵️ Visitor Intelligence Report</h2>
+
     <p id="browser"></p>
-    <p id="platform"></p>
+    <p id="device"></p>
     <p id="ip"></p>
     <p id="location"></p>
+    <p id="clicks"></p>
+
+    <div class="counter">Total Visits: <span id="visitCount"></span></div>
+
+    <h3 style="color:#00ff00; text-align:center;">🗺 Visitor Map</h3>
+    <iframe id="map" loading="lazy"></iframe>
 </div>
 
 <script>
-    document.getElementById("browser").innerText =
-        "Browser: " + navigator.userAgent;
+// Show Data Box
+function showData() {
+    document.querySelector(".loader").style.display = "none";
+    document.querySelector(".box").style.display = "block";
+}
 
-    document.getElementById("platform").innerText =
-        "Device: " + navigator.platform;
+// Visitor Counter
+let count = localStorage.getItem("visits");
+if (!count) count = 1;
+else count = parseInt(count) + 1;
+localStorage.setItem("visits", count);
 
-    fetch("https://api.ipify.org?format=json")
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("ip").innerText =
-                "IP Address: " + data.ip;
-        });
+document.getElementById("visitCount").innerText = count;
 
+// Click tracker
+let clickCount = 0;
+document.addEventListener("click", () => {
+    clickCount++;
+    document.getElementById("clicks").innerText = "Screen Clicks: " + clickCount;
+});
+
+// Browser + Device Information
+document.getElementById("browser").innerText = "Browser: " + navigator.userAgent;
+
+// Exact Device Model detector
+function getDeviceModel() {
+    let ua = navigator.userAgent;
+    if (ua.includes("Android")) return "Android Device";
+    if (ua.includes("iPhone")) return "iPhone";
+    if (ua.includes("iPad")) return "iPad";
+    if (ua.includes("Windows")) return "Windows PC";
+    if (ua.includes("Mac")) return "MacBook / iMac";
+    return "Unknown Device";
+}
+
+document.getElementById("device").innerText = "Device: " + getDeviceModel();
+
+// Fetch Visitor IP
+fetch("https://api.ipify.org?format=json")
+.then(res => res.json())
+.then(ipData => {
+    document.getElementById("ip").innerText = "IP Address: " + ipData.ip;
+
+    // Fetch Visitor Location
     fetch("https://ipapi.co/json/")
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById("location").innerText =
-                "City: " + data.city + ", " + data.region + ", " + data.country_name;
-        });
+    .then(res => res.json())
+    .then(loc => {
+
+        document.getElementById("location").innerText =
+        "Location: " + loc.city + ", " + loc.region + ", " + loc.country_name;
+
+        // Map
+        document.getElementById("map").src =
+        `https://maps.google.com/maps?q=${loc.latitude},${loc.longitude}&z=12&output=embed`;
+
+        showData();
+
+        // Email Alert (Optional)
+        fetch(`https://maker.ifttt.com/trigger/visitor_alert/with/key/YOUR_KEY?value1=${ipData.ip}&value2=${loc.city}&value3=${navigator.userAgent}`);
+    });
+});
 </script>
 
 </body>
